@@ -23,8 +23,18 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
+    NSURL *clientTokenURL = [NSURL URLWithString:@"https://braintree-sample-merchant.herokuapp.com/client_token"];
+    NSMutableURLRequest *clientTokenRequest = [NSMutableURLRequest requestWithURL:clientTokenURL];
+    [clientTokenRequest setValue:@"text/plain" forHTTPHeaderField:@"Accept"];
     
-
+    [[[NSURLSession sharedSession] dataTaskWithRequest:clientTokenRequest completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        // TODO: Handle errors
+        NSString *clientToken = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        
+        self.braintreeClient = [[BTAPIClient alloc] initWithAuthorization:clientToken];
+        // As an example, you may wish to present our Drop-in UI at this point.
+        // Continue to the next section to learn more...
+    }] resume];
     
     [self stat];
     NSLog(@"%@", ser_Status);
@@ -65,6 +75,7 @@
     {
         _statusBar.progress = 1.0;
         _cancelButton.enabled = false;
+        _makePayment.hidden = false;
     }
     else if ([ser_Status isEqualToString:@"cancelled"]){
         _st1.hidden = YES;
@@ -210,6 +221,61 @@
                          }];
     [fieldAreEmpty addAction:ok];
     [self presentViewController:fieldAreEmpty animated:YES completion:nil];
+}
+
+
+- (IBAction)tappedMyPayButton {
+    
+    // If you haven't already, create and retain a `BTAPIClient` instance with a tokenization
+    // key or a client token from your server.
+    // Typically, you only need to do this once per session.
+    //self.braintreeClient = [[BTAPIClient alloc] initWithAuthorization:CLIENT_AUTHORIZATION];
+    
+    // Create a BTDropInViewController
+    BTDropInViewController *dropInViewController = [[BTDropInViewController alloc]
+                                                    initWithAPIClient:self.braintreeClient];
+    dropInViewController.delegate = self;
+    
+    // This is where you might want to customize your view controller (see below)
+    
+    // The way you present your BTDropInViewController instance is up to you.
+    // In this example, we wrap it in a new, modally-presented navigation controller:
+    UIBarButtonItem *item = [[UIBarButtonItem alloc]
+                             initWithBarButtonSystemItem:UIBarButtonSystemItemCancel
+                             target:self
+                             action:@selector(userDidCancelPayment)];
+    dropInViewController.navigationItem.leftBarButtonItem = item;
+    UINavigationController *navigationController = [[UINavigationController alloc]
+                                                    initWithRootViewController:dropInViewController];
+    [self presentViewController:navigationController animated:YES completion:nil];
+}
+
+- (void)userDidCancelPayment {
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+
+- (void)dropInViewController:(BTDropInViewController *)viewController
+  didSucceedWithTokenization:(BTPaymentMethodNonce *)paymentMethodNonce {
+    // Send payment method nonce to your server for processing
+    [self postNonceToServer:paymentMethodNonce.nonce];
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+- (void)dropInViewControllerDidCancel:(__unused BTDropInViewController *)viewController {
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+- (void)postNonceToServer:(NSString *)paymentMethodNonce {
+    // Update URL with your server
+    NSURL *paymentURL = [NSURL URLWithString:@"https://your-server.example.com/checkout"];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:paymentURL];
+    request.HTTPBody = [[NSString stringWithFormat:@"payment_method_nonce=%@", paymentMethodNonce] dataUsingEncoding:NSUTF8StringEncoding];
+    request.HTTPMethod = @"POST";
+    
+    [[[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        // TODO: Handle success and failure
+    }] resume];
 }
 
 

@@ -7,8 +7,10 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "BraintreeCore.h"
+#import "BraintreeUI.h"
 
-@interface DetailedServiceList : UIViewController
+@interface DetailedServiceList : UIViewController <BTDropInViewControllerDelegate>
 
 @property (retain, nonatomic) NSString *ser_CarRego;
 @property (retain, nonatomic) NSString *ser_Date;
@@ -26,12 +28,13 @@
 
 @property (weak, nonatomic) IBOutlet UIProgressView *statusBar;
 @property (weak, nonatomic) IBOutlet UIButton *cancelButton;
+@property (weak, nonatomic) IBOutlet UIButton *makePayment;
 @property (weak, nonatomic) IBOutlet UILabel *cancelstatus;
 @property (weak, nonatomic) IBOutlet UILabel *st1;
 @property (weak, nonatomic) IBOutlet UILabel *st2;
 @property (weak, nonatomic) IBOutlet UILabel *st3;
 
-
+@property (nonatomic, strong) BTAPIClient *braintreeClient;
 
 - (IBAction)cancelService:(id)sender;
 

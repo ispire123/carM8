@@ -8,7 +8,8 @@
 
 #import <UIKit/UIKit.h>
 
-@interface DetailDisplay : UIViewController
+
+@interface DetailDisplay : UIViewController 
 {
     //NSArray *productPrice;
 }
@@ -27,6 +28,7 @@
 @property (strong, nonatomic) IBOutlet UILabel *amountLabel;
 - (IBAction)done:(id)sender;
 @property (strong, nonatomic) IBOutlet UITextView *paymentInfoLabel;
+
 
 
 @end
